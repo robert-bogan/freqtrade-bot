@@ -6,9 +6,6 @@ on:
 jobs:
   validate-token:
     runs-on: ubuntu-latest
-    env:
-      TF_CLOUD_TOKEN: ${{ secrets.TF_CLOUD_TOKEN }}
-      hostname: app.terraform.io
 
     steps:
       - name: Checkout Repository
@@ -19,9 +16,22 @@ jobs:
         with:
           terraform_version: 1.5.7
 
-      - name: Configure backend (create dummy main.tf)
+      - name: Configure Terraform credentials
         run: |
-          echo '
+          mkdir -p ~/.terraform.d
+          cat > ~/.terraform.d/credentials.tfrc.json <<EOF
+          {
+            "credentials": {
+              "app.terraform.io": {
+                "token": "${{ secrets.TF_CLOUD_TOKEN }}"
+              }
+            }
+          }
+          EOF
+
+      - name: Create minimal Terraform config
+        run: |
+          cat > main.tf <<EOF
           terraform {
             cloud {
               organization = "freqcap"
@@ -31,7 +41,7 @@ jobs:
               }
             }
           }
-          ' > main.tf
+          EOF
 
-      - name: Terraform Init (validates TF_CLOUD_TOKEN)
+      - name: Terraform Init (tests token)
         run: terraform init
