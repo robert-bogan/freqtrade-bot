@@ -25,12 +25,21 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
+        env:
+          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+          TF_VAR_client_ip: ${{ secrets.CLIENT_IP }}
 
       - name: Terraform Validate
         run: terraform validate
+        env:
+          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+          TF_VAR_client_ip: ${{ secrets.CLIENT_IP }}
 
       - name: Terraform Plan
-        run: terraform plan
+        run: terraform plan -input=false
+        env:
+          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+          TF_VAR_client_ip: ${{ secrets.CLIENT_IP }}
 
       - name: Terraform Apply
         run: terraform apply -auto-approve
