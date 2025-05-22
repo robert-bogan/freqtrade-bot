@@ -6,6 +6,10 @@ on:
 jobs:
   validate-token:
     runs-on: ubuntu-latest
+    env:
+      TF_CLOUD_TOKEN: ${{ secrets.TF_CLOUD_TOKEN }}
+      hostname: app.terraform.io
+      
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
