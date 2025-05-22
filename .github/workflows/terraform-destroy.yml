@@ -27,6 +27,7 @@ jobs:
           TF_VAR_hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
           TF_VAR_client_ip: ${{ secrets.CLIENT_IP }}
           TF_VAR_ssh_key_name: ${{ secrets.SSH_KEY_NAME }}
+          TF_VAR_tf_cloud_token: ${{ secrets.TF_CLOUD_TOKEN }}
 
       - name: Terraform Destroy
         run: terraform destroy -auto-approve
@@ -34,3 +35,4 @@ jobs:
           TF_VAR_hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
           TF_VAR_client_ip: ${{ secrets.CLIENT_IP }}
           TF_VAR_ssh_key_name: ${{ secrets.SSH_KEY_NAME }}
+          TF_VAR_tf_cloud_token: ${{ secrets.TF_CLOUD_TOKEN }}
