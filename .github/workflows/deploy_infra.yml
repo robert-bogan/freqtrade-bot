@@ -9,6 +9,8 @@ jobs:
   terraform:
     name: Terraform Apply
     runs-on: ubuntu-latest
+    env:
+      TF_CLOUD_TOKEN: ${{ secrets.TF_CLOUD_TOKEN }}
 
     defaults:
       run:
