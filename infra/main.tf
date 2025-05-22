@@ -67,11 +67,11 @@ resource "hcloud_firewall" "freqtrade_fw" {
     source_ips  = ["YOUR_IP/32"]
     description = "PostgreSQL access (optional)"
   }
+}
 
-  resource "hcloud_firewall_attachment" "fw_attach" {
-    firewall_id = hcloud_firewall.main.id
-    server_ids  = [hcloud_server.freqtrade.id]
-  }
+resource "hcloud_firewall_attachment" "fw_attach" {
+  firewall_id = hcloud_firewall.main.id
+  server_ids  = [hcloud_server.freqtrade.id]
 }
 
 output "server_ip" {
