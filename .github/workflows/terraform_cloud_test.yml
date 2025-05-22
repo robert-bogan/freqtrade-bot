@@ -1,0 +1,23 @@
+name: Terraform Cloud Token Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  validate-token:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.7
+
+      - name: Verify Terraform Cloud login
+        env:
+          TF_CLOUD_TOKEN: ${{ secrets.TF_CLOUD_TOKEN }}
+        run: |
+          echo "Testing Terraform Cloud token..."
+          terraform login -cloud-only -token="${TF_CLOUD_TOKEN}" || exit 1
