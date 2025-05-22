@@ -12,7 +12,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: terraform
+        working-directory: /home/runner/work/freqtrade-bot/freqtrade-bot/infra
 
     steps:
       - name: Checkout Repository
