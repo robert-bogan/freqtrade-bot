@@ -14,3 +14,9 @@ variable "client_ip" {
   type        = string
   sensitive   = true
 }
+
+variable "ssh_public_key_path" {
+  description = "Path to your local SSH public key"
+  type        = string
+  default     = "~/.ssh/id_ed25519.pub"
+}
