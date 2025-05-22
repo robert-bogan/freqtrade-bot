@@ -1,27 +1,36 @@
-name: Destroy Infrastructure (Manual)
+name: Destroy Infrastructure
 
 on:
-  workflow_dispatch:  # Manual trigger only
+  workflow_dispatch:
 
 jobs:
-  destroy:
+  terraform:
+    name: Terraform Destroy
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: /home/runner/work/freqtrade-bot/freqtrade-bot/infra
+
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
-    - name: Set up SSH key
-      run: |
-        echo "${{ secrets.SSH_KEY }}" | base64 -d > key.pem
-        chmod 600 key.pem
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.7
 
-    - name: Terraform Init
-      run: |
-        cd terraform
-        terraform init
+      - name: Terraform Init
+        run: terraform init
+        env:
+          TF_VAR_hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
+          TF_VAR_client_ip: ${{ secrets.CLIENT_IP }}
+          TF_VAR_ssh_key_name: ${{ secrets.SSH_KEY_NAME }}
 
-    - name: Terraform Destroy
-      run: |
-        cd terraform
-        terraform destroy -auto-approve
+      - name: Terraform Destroy
+        run: terraform destroy -auto-approve
+        env:
+          TF_VAR_hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
+          TF_VAR_client_ip: ${{ secrets.CLIENT_IP }}
+          TF_VAR_ssh_key_name: ${{ secrets.SSH_KEY_NAME }}
