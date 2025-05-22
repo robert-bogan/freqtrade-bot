@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  freqtrade:
+    image: freqtradeorg/freqtrade:stable
+    container_name: freqtrade
+    volumes:
+      - ./user_data:/freqtrade/user_data
+    env_file:
+      - ./config/.env
+    command: >
+      trade
+      --config /freqtrade/user_data/config.json
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:13
+    container_name: freqtrade-db
+    environment:
+      POSTGRES_USER: freqtrade
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: freqtrade_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  pgdata:

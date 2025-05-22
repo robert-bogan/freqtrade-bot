@@ -1,0 +1,68 @@
+provider "hcloud" {
+  token = var.hcloud_token
+}
+
+resource "hcloud_server" "freqtrade" {
+  name        = "freqtrade-bot"
+  server_type = "cpx21"
+  image       = "ubuntu-22.04"
+  location    = "fsn1"
+  ssh_keys    = [var.ssh_key_name]
+
+  labels = {
+    project = "freqtrade"
+  }
+
+  user_data = <<-EOF
+    #cloud-config
+    package_update: true
+    package_upgrade: true
+    packages:
+      - git
+      - python3-pip
+      - docker.io
+      - docker-compose
+
+    runcmd:
+      - systemctl enable docker
+      - systemctl start docker
+      - usermod -aG docker ubuntu
+      - su - ubuntu -c "mkdir -p ~/freqtrade-bot"
+  EOF
+}
+
+resource "hcloud_firewall" "freqtrade_fw" {
+  name = "freqtrade-firewall"
+
+  rule {
+    direction   = "in"
+    protocol    = "tcp"
+    port        = "22"
+    source_ips  = ["0.0.0.0/0"]
+    description = "Allow SSH"
+  }
+
+  rule {
+    direction   = "in"
+    protocol    = "tcp"
+    port        = "8080"
+    source_ips  = ["0.0.0.0/0"]
+    description = "Freqtrade Web UI"
+  }
+
+  rule {
+    direction   = "in"
+    protocol    = "tcp"
+    port        = "5432"
+    source_ips  = ["YOUR_IP/32"]
+    description = "PostgreSQL access (optional)"
+  }
+
+  apply_to {
+    server_id = hcloud_server.freqtrade.id
+  }
+}
+
+output "server_ip" {
+  value = hcloud_server.freqtrade.ipv4_address
+}

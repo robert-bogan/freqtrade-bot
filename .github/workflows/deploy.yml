@@ -1,0 +1,33 @@
+name: Deploy to Hetzner
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up SSH key
+      run: |
+        echo "${{ secrets.SSH_KEY }}" | base64 -d > key.pem
+        chmod 600 key.pem
+
+    - name: Upload files to server
+      run: |
+        rsync -avz -e "ssh -i key.pem -o StrictHostKeyChecking=no"           --exclude '.git*'           ./ ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.SSH_USER }}/freqtrade-bot
+
+    - name: Configure & start Freqtrade
+      run: |
+        ssh -i key.pem -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+          cd ~/freqtrade-bot
+          cp config/config.json.template user_data/config.json
+          export $(cat config/.env | xargs)
+          envsubst < config/config.json.template > user_data/config.json
+          docker compose down
+          docker compose up -d --build
+        EOF
