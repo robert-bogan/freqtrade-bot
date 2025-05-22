@@ -74,6 +74,12 @@ resource "hcloud_firewall_attachment" "fw_attach" {
   server_ids  = [hcloud_server.freqtrade.id]
 }
 
+resource "hcloud_firewall_attachment" "fw_attach" {
+  firewall_id = hcloud_firewall.freqtrade_fw.id
+  server_ids  = [hcloud_server.freqtrade.id]
+}
+
+
 output "server_ip" {
   value = hcloud_server.freqtrade.ipv4_address
 }
