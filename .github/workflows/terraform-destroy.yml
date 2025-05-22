@@ -1,0 +1,27 @@
+name: Destroy Infrastructure (Manual)
+
+on:
+  workflow_dispatch:  # Manual trigger only
+
+jobs:
+  destroy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Set up SSH key
+      run: |
+        echo "${{ secrets.SSH_KEY }}" | base64 -d > key.pem
+        chmod 600 key.pem
+
+    - name: Terraform Init
+      run: |
+        cd terraform
+        terraform init
+
+    - name: Terraform Destroy
+      run: |
+        cd terraform
+        terraform destroy -auto-approve
