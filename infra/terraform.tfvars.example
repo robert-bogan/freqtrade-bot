@@ -1,2 +1,0 @@
-hcloud_token = "your-hetzner-api-token"
-ssh_key_name = "your-ssh-key-name"
