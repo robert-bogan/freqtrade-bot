@@ -9,7 +9,7 @@ jobs:
     env:
       TF_CLOUD_TOKEN: ${{ secrets.TF_CLOUD_TOKEN }}
       hostname: app.terraform.io
-      
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -19,9 +19,19 @@ jobs:
         with:
           terraform_version: 1.5.7
 
-      - name: Verify Terraform Cloud login
-        env:
-          TF_CLOUD_TOKEN: ${{ secrets.TF_CLOUD_TOKEN }}
+      - name: Configure backend (create dummy main.tf)
         run: |
-          echo "Testing Terraform Cloud token..."
-          terraform login -cloud-only -token="${TF_CLOUD_TOKEN}" || exit 1
+          echo '
+          terraform {
+            cloud {
+              organization = "freqcap"
+
+              workspaces {
+                name = "freqtrade-infra"
+              }
+            }
+          }
+          ' > main.tf
+
+      - name: Terraform Init (validates TF_CLOUD_TOKEN)
+        run: terraform init
