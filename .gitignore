@@ -1,0 +1,37 @@
+# Terraform state files and crash logs
+*.tfstate
+*.tfstate.*
+crash.log
+
+# Terraform plan files
+*.tfplan
+
+# Sensitive variable override files
+*.tfvars
+*.tfvars.json
+
+# Local .terraform dir (providers/plugins, etc.)
+.terraform/
+
+# Exclude override files (often used for local dev)
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Sensitive output or logs
+*.log
+*.bak
+
+# Mac and OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore secrets/env files
+.env
+.env.*
+
+# Ignore editor/project files
+.idea/
+.vscode/
+*.swp
