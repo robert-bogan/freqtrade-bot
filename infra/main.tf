@@ -7,6 +7,7 @@ terraform {
   }
 }
 
+
 provider "hcloud" {
   token = var.hcloud_token
 }
@@ -67,9 +68,9 @@ resource "hcloud_firewall" "freqtrade_fw" {
     description = "PostgreSQL access (optional)"
   }
 
-  apply_to {
-    server_id = hcloud_server.freqtrade.id
-  }
+  resource "hcloud_firewall_attachment" "fw_attach" {
+    firewall_id = hcloud_firewall.main.id
+    server_ids  = [hcloud_server.freqtrade.id]
 }
 
 output "server_ip" {
