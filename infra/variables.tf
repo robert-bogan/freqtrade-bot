@@ -8,3 +8,8 @@ variable "ssh_key_name" {
   description = "SSH key name in Hetzner Cloud"
   type        = string
 }
+
+variable "client_ip" {
+  description = "The IP address allowed to access the server"
+  type        = string
+}

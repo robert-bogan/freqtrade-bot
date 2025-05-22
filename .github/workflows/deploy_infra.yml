@@ -36,3 +36,4 @@ jobs:
         run: terraform apply -auto-approve
         env:
           HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+          TF_VAR_client_ip: ${{ secrets.CLIENT_IP }}

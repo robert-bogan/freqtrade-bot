@@ -64,7 +64,7 @@ resource "hcloud_firewall" "freqtrade_fw" {
     direction   = "in"
     protocol    = "tcp"
     port        = "5432"
-    source_ips  = ["${{ secrets.CLIENT_IP }}"]
+    source_ips  = [var.client_ip]
     description = "PostgreSQL access (optional)"
   }
 }
