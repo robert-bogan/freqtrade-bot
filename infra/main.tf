@@ -13,7 +13,7 @@ provider "hcloud" {
 }
 
 resource "hcloud_ssh_key" "default" {
-  name       = var.ssh_key_name
+  name       = "freqtrade-key-${random_id.suffix.hex}"
   public_key = file(var.ssh_public_key_path)
 }
 
@@ -47,7 +47,7 @@ resource "hcloud_server" "freqtrade" {
 }
 
 resource "hcloud_firewall" "freqtrade_fw" {
-  name = "freqtrade-firewall"
+  name = "freqtrade-fw-${random_id.suffix.hex}"
 
   rule {
     direction   = "in"
