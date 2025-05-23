@@ -7,12 +7,14 @@ variable "hcloud_token" {
 variable "ssh_key_name" {
   description = "SSH key name in Hetzner Cloud"
   type        = string
+  default     = "key1"
 }
 
 variable "client_ip" {
   description = "The IP address allowed to access the server"
   type        = string
   sensitive   = true
+  default     = ""
 }
 
 variable "ssh_public_key_path" {
