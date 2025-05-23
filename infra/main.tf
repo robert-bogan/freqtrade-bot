@@ -18,16 +18,16 @@ resource "random_id" "suffix" {
 
 
 resource "hcloud_ssh_key" "default" {
-  name       = "freqtrade-key-${random_id.suffix.hex}"
+  name       = "freqtrade-key-${random_id.suffix.hex}" 
   public_key = file(var.ssh_public_key_path)
 }
 
 resource "hcloud_server" "freqtrade" {
-  name        = "freqtrade-bot"
-  server_type = "cpx21"
+  name        = "freqtrade-${random_id.suffix.hex}"
   image       = "ubuntu-22.04"
+  server_type = "cpx21"
   location    = "fsn1"
-  ssh_keys    = [var.ssh_key_name]
+  ssh_keys    = [hcloud_ssh_key.default.name]  
 
   labels = {
     project = "freqtrade"
