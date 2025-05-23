@@ -12,6 +12,11 @@ provider "hcloud" {
   token = var.hcloud_token
 }
 
+resource "random_id" "suffix" {
+  byte_length = 4
+}
+
+
 resource "hcloud_ssh_key" "default" {
   name       = "freqtrade-key-${random_id.suffix.hex}"
   public_key = file(var.ssh_public_key_path)
