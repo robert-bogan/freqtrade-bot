@@ -27,7 +27,7 @@ resource "hcloud_server" "freqtrade" {
   image       = "ubuntu-22.04"
   server_type = "cpx21"
   location    = "fsn1"
-  ssh_keys    = [hcloud_ssh_key.default.name]  
+  ssh_keys    = [hcloud_ssh_key.default.id] 
 
   labels = {
     project = "freqtrade"
