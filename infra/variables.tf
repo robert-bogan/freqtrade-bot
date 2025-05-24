@@ -22,3 +22,7 @@ variable "ssh_public_key_path" {
   type        = string
   default     = "ssh_keys/id_ed25519.pub"
 }
+variable "luks_key" {
+  description = "LUKS encryption key (base64-encoded)"
+  type        = string
+}
