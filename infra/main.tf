@@ -61,8 +61,8 @@ resource "hcloud_server" "freqtrade" {
       - parted /dev/sdb mklabel gpt
       - parted -a opt /dev/sdb mkpart primary ext4 0% 100%
       - sleep 2
-      - echo -n "yes" | cryptsetup luksFormat /dev/sdb1 /root/luks.key
-      - cryptsetup luksOpen /dev/sdb1 secure_disk --key-file /root/luks.key
+      - echo -n "yes" | cryptsetup luksFormat /dev/sda1 /root/luks.key
+      - cryptsetup luksOpen /dev/sda1 secure_disk --key-file /root/luks.key
       - mkfs.ext4 /dev/mapper/secure_disk
       - mkdir -p /mnt/secure
       - mount /dev/mapper/secure_disk /mnt/secure
