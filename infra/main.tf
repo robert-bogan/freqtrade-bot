@@ -48,8 +48,9 @@ resource "hcloud_server" "freqtrade" {
     runcmd:
       - systemctl enable docker
       - systemctl start docker
-      - usermod -aG docker ubuntu
-      - su - ubuntu -c "mkdir -p ~/freqtrade-bot"
+      - mkdir -p /root/freqtrade-bot
+      - chown root:root /root/freqtrade-bot
+      - usermod -aG docker root
   EOF
 }
 
