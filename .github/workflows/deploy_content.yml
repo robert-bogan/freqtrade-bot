@@ -27,7 +27,7 @@ jobs:
 
     - name: Upload files to server
       run: |
-        rsync -avz -e "ssh -i key.pem -o StrictHostKeyChecking=no" --exclude '.git*' ./ ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:~/${{ secrets.SSH_USER }}/freqtrade-bot
+        rsync -avz -e "ssh -i key.pem -o StrictHostKeyChecking=no" --exclude '.git*' ./ ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:~/freqtrade-bot
 
     - name: Configure & start Freqtrade
       run: |
