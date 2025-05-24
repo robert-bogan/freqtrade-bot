@@ -72,7 +72,7 @@ user_data = <<-EOF
     - gocryptfs --passfile /root/gocryptfs_pass /mnt/secure_raw /mnt/secure
 
     # Optional: clear password file after mount
-    - rm -f /root/gocryptfs_pass
+    # - rm -f /root/gocryptfs_pass
 EOF
 
 
