@@ -25,6 +25,7 @@ variable "ssh_public_key_path" {
 variable "luks_key" {
   description = "LUKS encryption key (base64-encoded)"
   type        = string
+  sensitive   = true
 }
 
 variable "gocryptfs_pass" {
