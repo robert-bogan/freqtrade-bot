@@ -21,6 +21,10 @@ jobs:
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > key.pem
         chmod 600 key.pem
 
+    - name: Debug SSH
+      run: |
+        ssh -i key.pem -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "echo ✅ Connected"
+
     - name: Upload files to server
       run: |
         rsync -avz -e "ssh -i key.pem -o StrictHostKeyChecking=no" --exclude '.git*' ./ ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.SSH_USER }}/freqtrade-bot
