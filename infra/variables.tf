@@ -26,3 +26,9 @@ variable "luks_key" {
   description = "LUKS encryption key (base64-encoded)"
   type        = string
 }
+
+variable "gocryptfs_pass" {
+  description = "Base64-encoded passphrase for gocryptfs"
+  type        = string
+  sensitive   = true
+}
