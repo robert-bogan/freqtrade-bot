@@ -37,6 +37,8 @@ resource "hcloud_server" "freqtrade" {
     #cloud-config
     package_update: true
     package_upgrade: true
+    ssh_pwauth: false
+    disable_root: false
     packages:
       - git
       - python3-pip
