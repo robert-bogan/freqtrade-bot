@@ -52,6 +52,7 @@ user_data = <<-EOF
       owner: root:root
       content: "${var.gocryptfs_pass}"
 
+  # test
   runcmd:
     - echo "[INFO] Checking gocryptfs_pass file..." >> /var/log/cloud-init-output.log
     - if [ -s /root/gocryptfs_pass ]; then echo "[SUCCESS] gocryptfs_pass is not empty." >> /var/log/cloud-init-output.log; else echo "[ERROR] gocryptfs_pass is empty!" >> /var/log/cloud-init-output.log; fi
