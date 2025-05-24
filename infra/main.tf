@@ -45,10 +45,9 @@ resource "hcloud_server" "freqtrade" {
       - docker.io
       - docker-compose
       - gocryptfs
-      - fuse
 
     write_files:
-      - path: /root/.gocryptfs_pass
+      - path: /root/gocryptfs_pass
         permissions: '0600'
         owner: root:root
         content: ${base64decode(var.gocryptfs_pass)}
@@ -57,13 +56,23 @@ resource "hcloud_server" "freqtrade" {
       - systemctl enable docker
       - systemctl start docker
       - mkdir -p /root/freqtrade-bot
-      - chown root:root /root/freqtrade-bot
       - usermod -aG docker root
-      - mkdir -p /mnt/secure /mnt/secure_raw
-      - echo "${base64decode(var.gocryptfs_pass)}" | gocryptfs -q -init /mnt/secure_raw
-      - echo "${base64decode(var.gocryptfs_pass)}" | gocryptfs -q /mnt/secure_raw /mnt/secure
-      - chown root:root /mnt/secure
-      - rm -f /root/.gocryptfs_pass
+
+      # Create raw and mount dirs
+      - mkdir -p /mnt/secure_raw
+      - mkdir -p /mnt/secure
+
+      # Initialize encrypted fs (only if not already done)
+      - |
+        if [ ! -f /mnt/secure_raw/gocryptfs.conf ]; then
+          echo "$(cat /root/gocryptfs_pass)" | gocryptfs -init /mnt/secure_raw
+        fi
+
+      # Mount using password
+      - echo "$(cat /root/gocryptfs_pass)" | gocryptfs /mnt/secure_raw /mnt/secure
+
+      # Clean up key
+      - rm -f /root/gocryptfs_pass
   EOF
 
 }
