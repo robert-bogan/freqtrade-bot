@@ -50,7 +50,7 @@ user_data = <<-EOF
     - path: /root/gocryptfs_pass
       permissions: '0600'
       owner: root:root
-      content: ${base64decode(var.gocryptfs_pass)}
+      content: "${var.gocryptfs_pass}"
 
   runcmd:
     - systemctl enable docker
