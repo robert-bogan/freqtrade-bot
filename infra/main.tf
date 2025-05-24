@@ -33,47 +33,48 @@ resource "hcloud_server" "freqtrade" {
     project = "freqtrade"
   }
 
-  user_data = <<-EOF
-    #cloud-config
-    package_update: true
-    package_upgrade: true
-    ssh_pwauth: false
-    disable_root: false
-    packages:
-      - git
-      - python3-pip
-      - docker.io
-      - docker-compose
-      - gocryptfs
+user_data = <<-EOF
+  #cloud-config
+  package_update: true
+  package_upgrade: true
+  ssh_pwauth: false
+  disable_root: false
+  packages:
+    - git
+    - python3-pip
+    - docker.io
+    - docker-compose
+    - gocryptfs
 
-    write_files:
-      - path: /root/gocryptfs_pass
-        permissions: '0600'
-        owner: root:root
-        content: ${base64decode(var.gocryptfs_pass)}
+  write_files:
+    - path: /root/gocryptfs_pass
+      permissions: '0600'
+      owner: root:root
+      content: ${base64decode(var.gocryptfs_pass)}
 
-    runcmd:
-      - systemctl enable docker
-      - systemctl start docker
-      - mkdir -p /root/freqtrade-bot
-      - usermod -aG docker root
+  runcmd:
+    - systemctl enable docker
+    - systemctl start docker
+    - mkdir -p /root/freqtrade-bot
+    - usermod -aG docker root
 
-      # Create raw and mount dirs
-      - mkdir -p /mnt/secure_raw
-      - mkdir -p /mnt/secure
+    # Setup encrypted folders
+    - mkdir -p /mnt/secure_raw
+    - mkdir -p /mnt/secure
 
-      # Initialize encrypted fs (only if not already done)
-      - |
-        if [ ! -f /mnt/secure_raw/gocryptfs.conf ]; then
-          echo "$(cat /root/gocryptfs_pass)" | gocryptfs -init /mnt/secure_raw
-        fi
+    # Initialize gocryptfs if not already done
+    - |
+      if [ ! -f /mnt/secure_raw/gocryptfs.conf ]; then
+        gocryptfs -init --passfile /root/gocryptfs_pass /mnt/secure_raw
+      fi
 
-      # Mount using password
-      - echo "$(cat /root/gocryptfs_pass)" | gocryptfs /mnt/secure_raw /mnt/secure
+    # Mount the encrypted FS
+    - gocryptfs --passfile /root/gocryptfs_pass /mnt/secure_raw /mnt/secure
 
-      # Clean up key
-      - rm -f /root/gocryptfs_pass
-  EOF
+    # Optional: clear password file after mount
+    - rm -f /root/gocryptfs_pass
+EOF
+
 
 }
 
