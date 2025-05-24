@@ -39,12 +39,15 @@ user_data = <<-EOF
   package_upgrade: true
   ssh_pwauth: false
   disable_root: false
+
   packages:
+    - parted
+    - cryptsetup
+    - gocryptfs
     - git
     - python3-pip
     - docker.io
     - docker-compose
-    - gocryptfs
 
   write_files:
     - path: /root/gocryptfs_pass
@@ -52,32 +55,30 @@ user_data = <<-EOF
       owner: root:root
       content: "${var.gocryptfs_pass}"
 
-  # test
   runcmd:
-    - echo "[INFO] Checking gocryptfs_pass file..." >> /var/log/cloud-init-output.log
-    - if [ -s /root/gocryptfs_pass ]; then echo "[SUCCESS] gocryptfs_pass is not empty." >> /var/log/cloud-init-output.log; else echo "[ERROR] gocryptfs_pass is empty!" >> /var/log/cloud-init-output.log; fi
+    # 1. Prepare disk
+    - parted /dev/sdb mklabel gpt
+    - parted -a opt /dev/sdb mkpart primary ext4 0% 100%
+    - sleep 2
 
-  runcmd:
+    # 2. Format and mount encrypted filesystem
+    - mkdir -p /mnt/secure_raw
+    - echo "${var.gocryptfs_pass}" > /root/gocryptfs_pass
+    - echo "${var.gocryptfs_pass}" | gocryptfs -init /mnt/secure_raw
+    - echo "${var.gocryptfs_pass}" | gocryptfs /mnt/secure_raw /mnt/secure
+    - chmod 700 /mnt/secure
+    - rm -f /root/gocryptfs_pass
+
+    # 3. Now install and set up docker + app
     - systemctl enable docker
     - systemctl start docker
-    - mkdir -p /root/freqtrade-bot
+    - mkdir -p /mnt/secure/freqtrade-bot
+    - git clone https://github.com/robert-bogan/freqtrade-bot /mnt/secure/freqtrade-bot
+    - cd /mnt/secure/freqtrade-bot
+    - pip3 install poetry
+    - poetry install
     - usermod -aG docker root
 
-    # Setup encrypted folders
-    - mkdir -p /mnt/secure_raw
-    - mkdir -p /mnt/secure
-
-    # Initialize gocryptfs if not already done
-    - |
-      if [ ! -f /mnt/secure_raw/gocryptfs.conf ]; then
-        gocryptfs -init --passfile /root/gocryptfs_pass /mnt/secure_raw
-      fi
-
-    # Mount the encrypted FS
-    - gocryptfs --passfile /root/gocryptfs_pass /mnt/secure_raw /mnt/secure
-
-    # Optional: clear password file after mount
-    # - rm -f /root/gocryptfs_pass
 EOF
 
 
