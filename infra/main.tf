@@ -126,23 +126,22 @@ resource "hcloud_server" "freqtrade" {
       - systemctl enable docker
       - systemctl start docker
 
-      # Setup gocryptfs
       - mkdir -p /mnt/secure_raw
       - mkdir -p /mnt/secure
       - echo "${var.gocryptfs_pass}" | gocryptfs -init /mnt/secure_raw
+      - rm -rf /mnt/secure/*
       - echo "${var.gocryptfs_pass}" | gocryptfs -allow_other -exec /mnt/secure_raw /mnt/secure
 
-      # Create directories and render config
       - mkdir -p /mnt/secure/freqtrade-bot/user_data
       - chown -R root:root /mnt/secure/freqtrade-bot
+
       - export $(cat /mnt/secure/freqtrade-bot/config/.env | xargs)
       - envsubst < /mnt/secure/freqtrade-bot/config/config.json.template > /mnt/secure/freqtrade-bot/user_data/config.json
 
-      # Start docker containers
-      - docker compose -f /mnt/secure/freqtrade-bot/docker-compose.yml up -d --build
+      - docker-compose -f /mnt/secure/freqtrade-bot/docker-compose.yml up -d --build
 
-      # Clean up secrets
       - rm -f /root/gocryptfs_pass
+
 
   EOF
 }
