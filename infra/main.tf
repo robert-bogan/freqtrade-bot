@@ -75,6 +75,7 @@ user_data = <<-EOF
     - usermod -aG docker root
 
     # 3. Clone the repo only after /mnt/secure is available
+    - mkdir -p /mnt/secure/freqtrade-bot
     - git clone https://github.com/robert-bogan/freqtrade-bot /mnt/secure/freqtrade-bot
 
     # 4. Start Docker Compose stack (will be reconfigured later via GitHub Actions)

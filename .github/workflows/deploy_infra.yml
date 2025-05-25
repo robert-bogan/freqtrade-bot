@@ -84,9 +84,10 @@ jobs:
 
             # Write .env file from GitHub secret
             cat <<EOT > config/.env
-              POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             # Add any other secrets here
             EOT
+
 
             # Optional: show that .env was created
             ls -la config/.env
