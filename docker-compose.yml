@@ -6,8 +6,10 @@ services:
     container_name: freqtrade
     volumes:
       - ./user_data:/freqtrade/user_data
+      - ./scripts/post-setup.sh:/freqtrade/post-setup.sh
     env_file:
       - ./config/.env
+    entrypoint: ["/bin/bash", "-c", "/freqtrade/post-setup.sh && freqtrade"]
     command: >
       trade
       --config /freqtrade/user_data/config.json
