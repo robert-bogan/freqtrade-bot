@@ -87,7 +87,7 @@ user_data = <<-EOF
             "host": "postgres",
             "port": 5432,
             "user": "freqtrade",
-            "password": "${POSTGRES_PASSWORD}",
+            "password": "${var.postgres_password}",
             "database": "freqtrade_db"
           }
         }
