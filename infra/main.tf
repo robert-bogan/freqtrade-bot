@@ -65,6 +65,10 @@ user_data = <<-EOF
     # Clone the freqtrade repo into secure mount
     - git clone https://github.com/robert-bogan/freqtrade-bot.git /mnt/secure/freqtrade-bot
 
+    # set up config.json
+    - cp /mnt/secure/freqtrade-bot/config/config.json /mnt/secure/freqtrade-bot/user_data/config.json
+    - chmod 644 /mnt/secure/freqtrade-bot/user_data/config.json
+
     # Create env config
     - mkdir -p /mnt/secure/freqtrade-bot/config
     - echo "POSTGRES_PASSWORD=${var.postgres_password}" > /mnt/secure/freqtrade-bot/config/.env
