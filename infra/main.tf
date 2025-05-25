@@ -54,13 +54,6 @@ user_data = <<-EOF
       owner: root:root
       content: "${var.gocryptfs_pass}"
 
-    - path: /mnt/secure/freqtrade-bot/config/.env
-      permissions: '0600'
-      owner: root:root
-      content: |
-        POSTGRES_PASSWORD=${var.postgres_password}
-        # Add more env vars as needed
-
   runcmd:
     - systemctl enable docker
     - systemctl start docker
@@ -79,8 +72,28 @@ user_data = <<-EOF
 
     # Clean up secrets
     - rm -f /root/gocryptfs_pass
-EOF
 
+  write_files:
+    - path: /mnt/secure/freqtrade-bot/config/.env
+      permissions: '0600'
+      owner: root:root
+      content: |
+        POSTGRES_PASSWORD=${var.postgres_password}
+
+  runcmd:
+    - ls -la config/.env
+    - systemctl start docker
+    - |     
+        # Render the final config.json
+        if [ -f config/config.json.template ]; then
+          export $(cat config/.env | xargs)
+          envsubst < config/config.json.template > user_data/config.json
+        fi
+
+        docker compose down
+        docker compose up -d --build
+
+EOF
 
 }
 
