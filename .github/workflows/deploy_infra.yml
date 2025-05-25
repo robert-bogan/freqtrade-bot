@@ -75,10 +75,26 @@ jobs:
       - name: Configure & start Freqtrade
         run: |
           ssh -i key.pem -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            cd ~/freqtrade-bot
-            cp config/config.json.template user_data/config.json
-            export $(cat config/.env | xargs)
-            envsubst < config/config.json.template > user_data/config.json
+            cd /mnt/secure/freqtrade-bot
+
+            mkdir -p user_data config
+
+            # Write .env file from GitHub secret
+            cat <<EOT > config/.env
+              POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            # Add any other secrets here
+            EOT
+
+            # Optional: show that .env was created
+            ls -la config/.env
+
+            # Render the final config.json
+            if [ -f config/config.json.template ]; then
+              export $(cat config/.env | xargs)
+              envsubst < config/config.json.template > user_data/config.json
+            fi
+
             docker compose down
             docker compose up -d --build
-          EOF
+            EOF
+
