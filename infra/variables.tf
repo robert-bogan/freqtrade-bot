@@ -29,7 +29,13 @@ variable "luks_key" {
 }
 
 variable "gocryptfs_pass" {
-  description = "Passphrase for gocryptfs"
   type        = string
+  description = "Password used for gocryptfs volume encryption"
+  sensitive   = true
+}
+
+variable "postgres_password" {
+  type        = string
+  description = "Postgres DB password for freqtrade"
   sensitive   = true
 }

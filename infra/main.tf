@@ -41,12 +41,12 @@ user_data = <<-EOF
   disable_root: false
 
   packages:
-    - parted
-    - cryptsetup
-    - gocryptfs
     - git
+    - python3-pip
     - docker.io
     - docker-compose
+    - gocryptfs
+    - tree
 
   write_files:
     - path: /root/gocryptfs_pass
@@ -54,35 +54,33 @@ user_data = <<-EOF
       owner: root:root
       content: "${var.gocryptfs_pass}"
 
+    - path: /mnt/secure/freqtrade-bot/config/.env
+      permissions: '0600'
+      owner: root:root
+      content: |
+        POSTGRES_PASSWORD=${var.postgres_password}
+        # Add more env vars as needed
+
   runcmd:
-    # 1. Format & mount encrypted filesystem
-    - mkdir -p /mnt/secure_raw
-    - echo "${var.gocryptfs_pass}" > /root/gocryptfs_pass
-
-    # Initialize gocryptfs only if not already set up
-    - '[ ! -f /mnt/secure_raw/gocryptfs.conf ] && echo "${var.gocryptfs_pass}" | gocryptfs -init /mnt/secure_raw || true'
-
-    # Mount encrypted FS
-    - mkdir -p /mnt/secure
-    - echo "${var.gocryptfs_pass}" | gocryptfs /mnt/secure_raw /mnt/secure
-    - '[ -d /mnt/secure ] && chmod 700 /mnt/secure || (echo "Mount failed" && exit 1)'
-
-    - rm -f /root/gocryptfs_pass
-
-    # 2. Install & start Docker
     - systemctl enable docker
     - systemctl start docker
+
+    # Set up secure storage
+    - mkdir -p /mnt/secure_raw
+    - echo "${var.gocryptfs_pass}" | gocryptfs -init /mnt/secure_raw
+    - echo "${var.gocryptfs_pass}" | gocryptfs /mnt/secure_raw /mnt/secure
+
+    # Create required directories
+    - mkdir -p /mnt/secure/freqtrade-bot/config
+    - chown -R root:root /mnt/secure/freqtrade-bot
+
+    # Docker permissions for root (optional if already root user)
     - usermod -aG docker root
 
-    # 3. Clone the repo only after /mnt/secure is available
-    - mkdir -p /mnt/secure/freqtrade-bot
-    - git clone https://github.com/robert-bogan/freqtrade-bot /mnt/secure/freqtrade-bot
-
-    # 4. Start Docker Compose stack (will be reconfigured later via GitHub Actions)
-    - cd /mnt/secure/freqtrade-bot
-    - docker-compose up -d --build || true
-
+    # Clean up secrets
+    - rm -f /root/gocryptfs_pass
 EOF
+
 
 }
 
