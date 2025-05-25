@@ -60,12 +60,12 @@ user_data = <<-EOF
     - mkdir -p /mnt/secure_raw
     - mkdir -p /mnt/secure
     - echo "${var.gocryptfs_pass}" | gocryptfs -init /mnt/secure_raw
-    - echo "${var.gocryptfs_pass}" | gocryptfs /mnt/secure_raw /mnt/secure
+    - echo "${var.gocryptfs_pass}" | gocryptfs -allow_other /mnt/secure_raw /mnt/secure
 
     # Clone the freqtrade repo into secure mount
     - git clone https://github.com/robert-bogan/freqtrade-bot.git /mnt/secure/freqtrade-bot
 
-    # set up config.json
+    # set up config.json  TODO - it dint copy so need to fix
     - cp /mnt/secure/freqtrade-bot/config/config.json /mnt/secure/freqtrade-bot/user_data/config.json
     - chmod 644 /mnt/secure/freqtrade-bot/user_data/config.json
 
