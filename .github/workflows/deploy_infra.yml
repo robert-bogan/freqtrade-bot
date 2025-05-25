@@ -1,4 +1,4 @@
-name: Deploy Infrastructure
+name: Deploy Infrastructure & Freqtrade
 
 on:
   push:
@@ -16,11 +16,9 @@ jobs:
       TF_VAR_ssh_key_name: ${{ secrets.SSH_KEY_NAME }}
       TF_VAR_luks_key: ${{ secrets.LUKS_KEY }}
       TF_VAR_gocryptfs_pass: ${{ secrets.GOCRYPTFS_PASS }}
-      
-
     defaults:
       run:
-        working-directory: /home/runner/work/freqtrade-bot/freqtrade-bot/infra
+        working-directory: ./infra
 
     steps:
       - name: Checkout Repository
@@ -46,9 +44,41 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
+
       - name: Terraform Validate
         run: terraform validate
+
       - name: Terraform Plan
         run: terraform plan -input=false
+
       - name: Terraform Apply
         run: terraform apply -auto-approve
+
+  deploy-freqtrade:
+    name: Deploy Freqtrade
+    runs-on: ubuntu-latest
+    needs: terraform
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Create SSH key file
+        run: |
+          echo "${{ secrets.SSH_KEY }}" > key.pem
+          chmod 600 key.pem
+
+      - name: Upload files to server
+        run: |
+          rsync -avz -e "ssh -i key.pem -o StrictHostKeyChecking=no" --exclude '.git*' ./ ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:~/freqtrade-bot
+
+      - name: Configure & start Freqtrade
+        run: |
+          ssh -i key.pem -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            cd ~/freqtrade-bot
+            cp config/config.json.template user_data/config.json
+            export $(cat config/.env | xargs)
+            envsubst < config/config.json.template > user_data/config.json
+            docker compose down
+            docker compose up -d --build
+          EOF
