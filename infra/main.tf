@@ -58,24 +58,27 @@ user_data = <<-EOF
     - systemctl enable docker
     - systemctl start docker
 
-    # Set up secure encrypted directory BEFORE writing to it
+    # Mount encrypted volume
     - mkdir -p /mnt/secure_raw
     - mkdir -p /mnt/secure
     - echo "${var.gocryptfs_pass}" | gocryptfs -init /mnt/secure_raw
     - echo "${var.gocryptfs_pass}" | gocryptfs /mnt/secure_raw /mnt/secure
 
-    # Now safe to write secrets into mounted encrypted FS
+    # Clone the freqtrade repo into secure mount
+    - git clone https://github.com/robert-bogan/freqtrade-bot.git /mnt/secure/freqtrade-bot
+
+    # Create env config
     - mkdir -p /mnt/secure/freqtrade-bot/config
     - echo "POSTGRES_PASSWORD=${var.postgres_password}" > /mnt/secure/freqtrade-bot/config/.env
     - chown -R root:root /mnt/secure/freqtrade-bot
 
-    # Docker permissions for root
+    # Docker group (optional if already root)
     - usermod -aG docker root
 
-    # Debug check
-    - ls -la /mnt/secure/freqtrade-bot/config/.env
+    # Optional debug check
+    - ls -la /mnt/secure/freqtrade-bot
 
-    # Optional: render config.json if template exists
+    # Render config.json if template exists
     - |
         cd /mnt/secure/freqtrade-bot
         if [ -f config/config.json.template ]; then
@@ -87,9 +90,8 @@ user_data = <<-EOF
     - docker-compose down || true
     - docker-compose up -d --build
 
-    # Cleanup
+    # Clean up
     - rm -f /root/gocryptfs_pass
-
 EOF
 
 }
