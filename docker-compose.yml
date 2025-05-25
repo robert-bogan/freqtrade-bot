@@ -9,11 +9,12 @@ services:
       - ./scripts/post-setup.sh:/freqtrade/post-setup.sh
     env_file:
       - ./config/.env
-    entrypoint: ["/bin/bash", "-c", "/freqtrade/post-setup.sh && freqtrade"]
+    entrypoint: ["/bin/bash", "-c", "chmod +x /freqtrade/post-setup.sh && /freqtrade/post-setup.sh && freqtrade"]
     command: >
       trade
       --config /freqtrade/user_data/config.json
     restart: unless-stopped
+
 
   postgres:
     image: postgres:13
