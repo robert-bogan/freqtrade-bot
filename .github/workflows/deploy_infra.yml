@@ -16,6 +16,9 @@ jobs:
       TF_VAR_ssh_key_name: ${{ secrets.SSH_KEY_NAME }}
       TF_VAR_luks_key: ${{ secrets.LUKS_KEY }}
       TF_VAR_gocryptfs_pass: ${{ secrets.GOCRYPTFS_PASS }}
+      TF_VAR_postgres_password: ${{ secrets.POSTGRES_PASSWORD }}
+      TF_VAR_ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
+
     defaults:
       run:
         working-directory: ./infra
@@ -65,7 +68,7 @@ jobs:
 
       - name: Create SSH key file
         run: |
-          echo "${{ secrets.SSH_KEY }}" > key.pem
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > key.pem
           chmod 600 key.pem
 
       - name: Upload files to server
