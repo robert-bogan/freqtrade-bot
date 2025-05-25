@@ -10,7 +10,7 @@ on:
       commit_sha:
         description: 'Commit SHA'
         required: false
-        default: 'bd408832ca7a8770d8a4b31e31fa33fac57d5192'
+        default: '38aa0e56fa923a246c7cab43655bd2c23360e036'
 
 
 jobs:
