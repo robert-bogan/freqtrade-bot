@@ -56,12 +56,8 @@ user_data = <<-EOF
       content: "${var.gocryptfs_pass}"
 
   runcmd:
-    # 1. Prepare disk
-    - parted /dev/sdb mklabel gpt
-    - parted -a opt /dev/sdb mkpart primary ext4 0% 100%
-    - sleep 2
 
-    # 2. Format and mount encrypted filesystem
+    #  Format and mount encrypted filesystem
     - mkdir -p /mnt/secure_raw
     - echo "${var.gocryptfs_pass}" > /root/gocryptfs_pass
     - echo "${var.gocryptfs_pass}" | gocryptfs -init /mnt/secure_raw
@@ -69,7 +65,7 @@ user_data = <<-EOF
     - chmod 700 /mnt/secure
     - rm -f /root/gocryptfs_pass
 
-    # 3. Now install and set up docker + app
+    #  Now install and set up docker + app
     - systemctl enable docker
     - systemctl start docker
     - mkdir -p /mnt/secure/freqtrade-bot
