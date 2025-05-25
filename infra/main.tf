@@ -53,32 +53,29 @@ user_data = <<-EOF
       permissions: '0600'
       owner: root:root
       content: "${var.gocryptfs_pass}"
-    - path: /mnt/secure/freqtrade-bot/config/.env
-      permissions: '0600'
-      owner: root:root
-      content: |
-        POSTGRES_PASSWORD=${var.postgres_password}
 
   runcmd:
     - systemctl enable docker
     - systemctl start docker
 
-    # Set up secure encrypted directory
+    # Set up secure encrypted directory BEFORE writing to it
     - mkdir -p /mnt/secure_raw
+    - mkdir -p /mnt/secure
     - echo "${var.gocryptfs_pass}" | gocryptfs -init /mnt/secure_raw
     - echo "${var.gocryptfs_pass}" | gocryptfs /mnt/secure_raw /mnt/secure
 
-    # Set up Freqtrade directory
+    # Now safe to write secrets into mounted encrypted FS
     - mkdir -p /mnt/secure/freqtrade-bot/config
+    - echo "POSTGRES_PASSWORD=${var.postgres_password}" > /mnt/secure/freqtrade-bot/config/.env
     - chown -R root:root /mnt/secure/freqtrade-bot
 
-    # Docker group
+    # Docker permissions for root
     - usermod -aG docker root
 
-    # Debugging - list contents
+    # Debug check
     - ls -la /mnt/secure/freqtrade-bot/config/.env
 
-    # Optional: use envsubst to render config
+    # Optional: render config.json if template exists
     - |
         cd /mnt/secure/freqtrade-bot
         if [ -f config/config.json.template ]; then
@@ -87,14 +84,13 @@ user_data = <<-EOF
         fi
 
     - cd /mnt/secure/freqtrade-bot
-    - docker compose down || true
-    - docker compose up -d --build
+    - docker-compose down || true
+    - docker-compose up -d --build
 
-    # Remove sensitive passphrase file
+    # Cleanup
     - rm -f /root/gocryptfs_pass
 
 EOF
-
 
 }
 
