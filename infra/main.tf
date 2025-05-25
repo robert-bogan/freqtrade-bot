@@ -84,6 +84,14 @@ user_data = <<-EOF
           envsubst < config/config.json.template > config/config.json
         fi
 
+    # Ensure config.json is readable by Docker container (likely running as UID 1000)
+    - chmod -R 644 /mnt/secure/freqtrade-bot/user_data/
+    - chown -R 1000:1000 /mnt/secure/freqtrade-bot/user_data/
+
+    - echo "Permissions for config.json:"
+    - ls -l /mnt/secure/freqtrade-bot/user_data/config.json
+
+    # refresh docker instance
     - cd /mnt/secure/freqtrade-bot
     - docker-compose down || true
     - docker-compose up -d --build
