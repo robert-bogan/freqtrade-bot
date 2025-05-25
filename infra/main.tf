@@ -53,27 +53,6 @@ user_data = <<-EOF
       permissions: '0600'
       owner: root:root
       content: "${var.gocryptfs_pass}"
-
-  runcmd:
-    - systemctl enable docker
-    - systemctl start docker
-
-    # Set up secure storage
-    - mkdir -p /mnt/secure_raw
-    - echo "${var.gocryptfs_pass}" | gocryptfs -init /mnt/secure_raw
-    - echo "${var.gocryptfs_pass}" | gocryptfs /mnt/secure_raw /mnt/secure
-
-    # Create required directories
-    - mkdir -p /mnt/secure/freqtrade-bot/config
-    - chown -R root:root /mnt/secure/freqtrade-bot
-
-    # Docker permissions for root (optional if already root user)
-    - usermod -aG docker root
-
-    # Clean up secrets
-    - rm -f /root/gocryptfs_pass
-
-  write_files:
     - path: /mnt/secure/freqtrade-bot/config/.env
       permissions: '0600'
       owner: root:root
@@ -81,19 +60,41 @@ user_data = <<-EOF
         POSTGRES_PASSWORD=${var.postgres_password}
 
   runcmd:
-    - ls -la config/.env
+    - systemctl enable docker
     - systemctl start docker
-    - |     
-        # Render the final config.json
+
+    # Set up secure encrypted directory
+    - mkdir -p /mnt/secure_raw
+    - echo "${var.gocryptfs_pass}" | gocryptfs -init /mnt/secure_raw
+    - echo "${var.gocryptfs_pass}" | gocryptfs /mnt/secure_raw /mnt/secure
+
+    # Set up Freqtrade directory
+    - mkdir -p /mnt/secure/freqtrade-bot/config
+    - chown -R root:root /mnt/secure/freqtrade-bot
+
+    # Docker group
+    - usermod -aG docker root
+
+    # Debugging - list contents
+    - ls -la /mnt/secure/freqtrade-bot/config/.env
+
+    # Optional: use envsubst to render config
+    - |
+        cd /mnt/secure/freqtrade-bot
         if [ -f config/config.json.template ]; then
           export $(cat config/.env | xargs)
-          envsubst < config/config.json.template > user_data/config.json
+          envsubst < config/config.json.template > config/config.json
         fi
 
-        docker compose down
-        docker compose up -d --build
+    - cd /mnt/secure/freqtrade-bot
+    - docker compose down || true
+    - docker compose up -d --build
+
+    # Remove sensitive passphrase file
+    - rm -f /root/gocryptfs_pass
 
 EOF
+
 
 }
 
