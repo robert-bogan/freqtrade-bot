@@ -31,119 +31,66 @@ resource "hcloud_server" "freqtrade" {
     project = "freqtrade"
   }
 
-  user_data = <<-EOF
-    #cloud-config
-    package_update: true
-    package_upgrade: true
-    ssh_pwauth: false
-    disable_root: false
+user_data = <<-EOF
+  #cloud-config
+  package_update: true
+  package_upgrade: true
+  ssh_pwauth: false
+  disable_root: false
 
-    packages:
-      - git
-      - python3-pip
-      - docker.io
-      - docker-compose
-      - gocryptfs
-      - tree
+  packages:
+    - git
+    - python3-pip
+    - docker.io
+    - docker-compose
+    - gocryptfs
+    - tree
 
-    write_files:
-      - path: /root/gocryptfs_pass
-        permissions: '0600'
-        owner: root:root
-        content: "${var.gocryptfs_pass}"
+  write_files:
+    - path: /root/gocryptfs_pass
+      permissions: '0600'
+      owner: root:root
+      content: "${var.gocryptfs_pass}"
 
-      - path: /mnt/secure/freqtrade-bot/config/.env
-        permissions: '0600'
-        owner: root:root
-        content: |
-          POSTGRES_PASSWORD=${var.postgres_password}
+  runcmd:
+    - systemctl enable docker
+    - systemctl start docker
 
-      - path: /mnt/secure/freqtrade-bot/config/config.json.template
-        permissions: '0644'
-        owner: root:root
-        content: |
-          {
-            "dry_run": true,
-            "strategy": "InitialStrategy",
-            "exchange": {
-              "name": "",
-              "key": "",
-              "secret": "",
-              "password": "",
-              "ccxt_config": {},
-              "ccxt_async_config": {},
-              "pair_whitelist": ["BTC/USDT"],
-              "pair_blacklist": []
-            },
-            "telegram": {
-              "enabled": true,
-              "token": "",
-              "chat_id": ""
-            },
-            "databases": {
-              "driver": "postgresql",
-              "host": "postgres",
-              "port": 5432,
-              "user": "freqtrade",
-              "password": "${var.postgres_password}",
-              "database": "freqtrade_db"
-            }
-          }
+    # Mount encrypted volume
+    - mkdir -p /mnt/secure_raw
+    - mkdir -p /mnt/secure
+    - echo "${var.gocryptfs_pass}" | gocryptfs -init /mnt/secure_raw
+    - echo "${var.gocryptfs_pass}" | gocryptfs /mnt/secure_raw /mnt/secure
 
-      - path: /mnt/secure/freqtrade-bot/docker-compose.yml
-        permissions: '0644'
-        owner: root:root
-        content: |
-          version: '3.8'
-          services:
-            freqtrade:
-              image: freqtradeorg/freqtrade:stable
-              container_name: freqtrade
-              volumes:
-                - ./user_data:/freqtrade/user_data
-              env_file:
-                - ./config/.env
-              command: >
-                trade
-                --config /freqtrade/user_data/config.json
-              restart: unless-stopped
+    # Clone the freqtrade repo into secure mount
+    - git clone https://github.com/robert-bogan/freqtrade-bot.git /mnt/secure/freqtrade-bot
 
-            postgres:
-              image: postgres:13
-              container_name: freqtrade-db
-              environment:
-                POSTGRES_USER: freqtrade
-                POSTGRES_PASSWORD: ${var.postgres_password}
-                POSTGRES_DB: freqtrade_db
-              volumes:
-                - pgdata:/var/lib/postgresql/data
-              restart: unless-stopped
+    # Create env config
+    - mkdir -p /mnt/secure/freqtrade-bot/config
+    - echo "POSTGRES_PASSWORD=${var.postgres_password}" > /mnt/secure/freqtrade-bot/config/.env
+    - chown -R root:root /mnt/secure/freqtrade-bot
 
-          volumes:
-            pgdata:
+    # Docker group (optional if already root)
+    - usermod -aG docker root
 
-    runcmd:
-      - systemctl enable docker
-      - systemctl start docker
+    # Optional debug check
+    - ls -la /mnt/secure/freqtrade-bot
 
-      - mkdir -p /mnt/secure_raw
-      - mkdir -p /mnt/secure
-      - echo "${var.gocryptfs_pass}" | gocryptfs -init /mnt/secure_raw
-      - rm -rf /mnt/secure/*
-      - echo "${var.gocryptfs_pass}" | gocryptfs -allow_other -exec /mnt/secure_raw /mnt/secure
+    # Render config.json if template exists
+    - |
+        cd /mnt/secure/freqtrade-bot
+        if [ -f config/config.json.template ]; then
+          export $(cat config/.env | xargs)
+          envsubst < config/config.json.template > config/config.json
+        fi
 
-      - mkdir -p /mnt/secure/freqtrade-bot/user_data
-      - chown -R root:root /mnt/secure/freqtrade-bot
+    - cd /mnt/secure/freqtrade-bot
+    - docker-compose down || true
+    - docker-compose up -d --build
 
-      - export $(cat /mnt/secure/freqtrade-bot/config/.env | xargs)
-      - envsubst < /mnt/secure/freqtrade-bot/config/config.json.template > /mnt/secure/freqtrade-bot/user_data/config.json
-
-      - docker-compose -f /mnt/secure/freqtrade-bot/docker-compose.yml up -d --build
-
-      - rm -f /root/gocryptfs_pass
-
-
-  EOF
+    # Clean up
+    - rm -f /root/gocryptfs_pass
+EOF
 }
 
 resource "hcloud_firewall" "freqtrade_fw" {
