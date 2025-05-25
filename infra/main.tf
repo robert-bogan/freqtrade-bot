@@ -45,7 +45,6 @@ user_data = <<-EOF
     - cryptsetup
     - gocryptfs
     - git
-    - python3-pip
     - docker.io
     - docker-compose
 
@@ -56,27 +55,33 @@ user_data = <<-EOF
       content: "${var.gocryptfs_pass}"
 
   runcmd:
-
-    #  Format and mount encrypted filesystem
+    # 1. Format & mount encrypted filesystem
     - mkdir -p /mnt/secure_raw
     - echo "${var.gocryptfs_pass}" > /root/gocryptfs_pass
-    - echo "${var.gocryptfs_pass}" | gocryptfs -init /mnt/secure_raw
+
+    # Initialize gocryptfs only if not already set up
+    - '[ ! -f /mnt/secure_raw/gocryptfs.conf ] && echo "${var.gocryptfs_pass}" | gocryptfs -init /mnt/secure_raw || true'
+
+    # Mount encrypted FS
+    - mkdir -p /mnt/secure
     - echo "${var.gocryptfs_pass}" | gocryptfs /mnt/secure_raw /mnt/secure
-    - chmod 700 /mnt/secure
+    - '[ -d /mnt/secure ] && chmod 700 /mnt/secure || (echo "Mount failed" && exit 1)'
+
     - rm -f /root/gocryptfs_pass
 
-    #  Now install and set up docker + app
+    # 2. Install & start Docker
     - systemctl enable docker
     - systemctl start docker
-    - mkdir -p /mnt/secure/freqtrade-bot
-    - git clone https://github.com/robert-bogan/freqtrade-bot /mnt/secure/freqtrade-bot
-    - cd /mnt/secure/freqtrade-bot
-    - pip3 install poetry
-    - poetry install
     - usermod -aG docker root
 
-EOF
+    # 3. Clone the repo only after /mnt/secure is available
+    - git clone https://github.com/robert-bogan/freqtrade-bot /mnt/secure/freqtrade-bot
 
+    # 4. Start Docker Compose stack (will be reconfigured later via GitHub Actions)
+    - cd /mnt/secure/freqtrade-bot
+    - docker-compose up -d --build || true
+
+EOF
 
 }
 
