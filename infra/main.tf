@@ -38,6 +38,14 @@ user_data = <<-EOF
   ssh_pwauth: false
   disable_root: false
 
+  users:
+    - default
+    - name: freqtrade
+      groups: [docker, sudo]
+      shell: /bin/bash
+      sudo: ['ALL=(ALL) NOPASSWD:ALL']
+      lock_passwd: true
+
   packages:
     - git
     - python3-pip
@@ -47,37 +55,39 @@ user_data = <<-EOF
     - tree
 
   write_files:
-    - path: /root/gocryptfs_pass
+    - path: /home/freqtrade/.gocryptfs_pass
       permissions: '0600'
-      owner: root:root
+      owner: freqtrade:freqtrade
       content: "${var.gocryptfs_pass}"
 
   runcmd:
+    # Start Docker
     - systemctl enable docker
     - systemctl start docker
 
-    # Mount encrypted volume
+    # Create secure directories
     - mkdir -p /mnt/secure_raw
     - mkdir -p /mnt/secure
-    - echo "${var.gocryptfs_pass}" | gocryptfs -init /mnt/secure_raw
-    - echo "${var.gocryptfs_pass}" | gocryptfs -allow_other /mnt/secure_raw /mnt/secure
+    - chown freqtrade:freqtrade /mnt/secure_raw /mnt/secure
 
-    # Clone the freqtrade repo into secure mount
-    - git clone https://github.com/robert-bogan/freqtrade-bot.git /mnt/secure/freqtrade-bot
+    # Initialize and mount gocryptfs as freqtrade
+    - runuser -l freqtrade -c "gocryptfs -init /mnt/secure_raw || true"
+    - runuser -l freqtrade -c "gocryptfs --extpass 'cat /home/freqtrade/.gocryptfs_pass' /mnt/secure_raw /mnt/secure"
 
-    # set up config.json  TODO - it dint copy so need to fix
+    # Clone the repo as freqtrade user
+    - runuser -l freqtrade -c "git clone https://github.com/robert-bogan/freqtrade-bot.git /mnt/secure/freqtrade-bot"
+
+    # Set up config.json
     - cp /mnt/secure/freqtrade-bot/config/config.json /mnt/secure/freqtrade-bot/user_data/config.json
+    - chown -R freqtrade:freqtrade /mnt/secure/freqtrade-bot/user_data
     - chmod 644 /mnt/secure/freqtrade-bot/user_data/config.json
 
     # Create env config
     - mkdir -p /mnt/secure/freqtrade-bot/config
     - echo "POSTGRES_PASSWORD=${var.postgres_password}" > /mnt/secure/freqtrade-bot/config/.env
-    - chown -R root:root /mnt/secure/freqtrade-bot
+    - chown -R freqtrade:freqtrade /mnt/secure/freqtrade-bot
 
-    # Docker group (optional if already root)
-    - usermod -aG docker root
-
-    # Optional debug check
+    # Optional debug
     - ls -la /mnt/secure/freqtrade-bot
 
     # Render config.json if template exists
@@ -88,21 +98,13 @@ user_data = <<-EOF
           envsubst < config/config.json.template > config/config.json
         fi
 
-    # Ensure config.json is readable by Docker container (likely running as UID 1000)
-    - chmod -R 644 /mnt/secure/freqtrade-bot/user_data/
-    - chown -R 1000:1000 /mnt/secure/freqtrade-bot/user_data/
+    # Docker compose as freqtrade user
+    - runuser -l freqtrade -c "cd /mnt/secure/freqtrade-bot && docker-compose down || true"
+    - runuser -l freqtrade -c "cd /mnt/secure/freqtrade-bot && docker-compose up -d --build"
 
-    - echo "Permissions for config.json:"
-    - ls -l /mnt/secure/freqtrade-bot/user_data/config.json
-
-    # refresh docker instance
-    - cd /mnt/secure/freqtrade-bot
-    - docker-compose down || true
-    - docker-compose up -d --build
-
-    # Clean up
-    - rm -f /root/gocryptfs_pass
-EOF
+    # Clean up secrets
+    - rm -f /home/freqtrade/.gocryptfs_pass
+  EOF
 }
 
 resource "hcloud_firewall" "freqtrade_fw" {
