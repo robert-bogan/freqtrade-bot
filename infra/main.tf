@@ -85,6 +85,7 @@ user_data = <<-EOF
         fi
       "
 
+    - mkdir -p /mnt/secure/freqtrade-bot/user_data 
     - chown -R freqtrade:freqtrade /mnt/secure/freqtrade-bot/user_data
 
     # Set up config.json
