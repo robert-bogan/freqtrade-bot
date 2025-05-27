@@ -76,22 +76,22 @@ user_data = <<-EOF
 
 
     # Render config.json if template exists
-    - runuser -l freqtrade -c "
-      |
+    - runuser -l freqtrade -c 'bash -c "
         cd /mnt/secure/freqtrade-bot
         if [ -f config/config.json.template ]; then
-          export $(cat config/.env | xargs)
-          envsubst < config/config.json.template > config/config.json
+          export \$(cat config/.env | xargs)
+          envsubst < config/config.json.template > user_data/config.json
         fi
-      "
+    "'
 
-    - mkdir -p /mnt/secure/freqtrade-bot/user_data 
-    - chown -R freqtrade:freqtrade /mnt/secure/freqtrade-bot/user_data
 
-    # Set up config.json
+    - runuser -l freqtrade -c "mkdir -p /mnt/secure/freqtrade-bot/user_data"
+    # - chown -R freqtrade:freqtrade /mnt/secure/freqtrade-bot/user_data
+
+    # Set up freqtrade folders
     - runuser -l freqtrade -c "cp /mnt/secure/freqtrade-bot/config/config.json /mnt/secure/freqtrade-bot/user_data/config.json"
-    - runuser -l freqtrade -c "chown -R freqtrade:freqtrade /mnt/secure/freqtrade-bot/user_data"
-    - runuser -l freqtrade -c "chmod 644 /mnt/secure/freqtrade-bot/user_data/config.json"
+    # - runuser -l freqtrade -c "chown -R freqtrade:freqtrade /mnt/secure/freqtrade-bot/user_data"
+    # - runuser -l freqtrade -c "chmod 644 /mnt/secure/freqtrade-bot/user_data/config.json"
 
     # Clone the repo as freqtrade user
     - runuser -l freqtrade -c "git clone https://github.com/robert-bogan/freqtrade-bot.git /mnt/secure/freqtrade-bot"
