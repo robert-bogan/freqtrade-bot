@@ -73,7 +73,7 @@ user_data = <<-EOF
     # Initialize and mount gocryptfs as freqtrade
     - runuser -l freqtrade -c "gocryptfs -init /mnt/secure_raw || true"
     - runuser -l freqtrade -c "gocryptfs --extpass 'cat /home/freqtrade/.gocryptfs_pass' /mnt/secure_raw /mnt/secure"
-    # - chown -R freqtrade:freqtrade /mnt/secure/freqtrade-bot
+
 
     # Render config.json if template exists
     - runuser -l freqtrade -c "
@@ -84,7 +84,9 @@ user_data = <<-EOF
           envsubst < config/config.json.template > config/config.json
         fi
       "
-        
+
+    - chown -R freqtrade:freqtrade /mnt/secure/freqtrade-bot/user_data
+
     # Set up config.json
     - runuser -l freqtrade -c "cp /mnt/secure/freqtrade-bot/config/config.json /mnt/secure/freqtrade-bot/user_data/config.json"
     - runuser -l freqtrade -c "chown -R freqtrade:freqtrade /mnt/secure/freqtrade-bot/user_data"
