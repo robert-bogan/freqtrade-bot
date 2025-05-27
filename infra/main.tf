@@ -73,30 +73,32 @@ user_data = <<-EOF
     # Initialize and mount gocryptfs as freqtrade
     - runuser -l freqtrade -c "gocryptfs -init /mnt/secure_raw || true"
     - runuser -l freqtrade -c "gocryptfs --extpass 'cat /home/freqtrade/.gocryptfs_pass' /mnt/secure_raw /mnt/secure"
-
-    # Clone the repo as freqtrade user
-    - runuser -l freqtrade -c "git clone https://github.com/robert-bogan/freqtrade-bot.git /mnt/secure/freqtrade-bot"
-
-    # Set up config.json
-    - cp /mnt/secure/freqtrade-bot/config/config.json /mnt/secure/freqtrade-bot/user_data/config.json
-    - chown -R freqtrade:freqtrade /mnt/secure/freqtrade-bot/user_data
-    - chmod 644 /mnt/secure/freqtrade-bot/user_data/config.json
-
-    # Create env config
-    - mkdir -p /mnt/secure/freqtrade-bot/config
-    - echo "POSTGRES_PASSWORD=${var.postgres_password}" > /mnt/secure/freqtrade-bot/config/.env
-    - chown -R freqtrade:freqtrade /mnt/secure/freqtrade-bot
-
-    # Optional debug
-    - ls -la /mnt/secure/freqtrade-bot
+    # - chown -R freqtrade:freqtrade /mnt/secure/freqtrade-bot
 
     # Render config.json if template exists
-    - |
+    - runuser -l freqtrade -c "
+      |
         cd /mnt/secure/freqtrade-bot
         if [ -f config/config.json.template ]; then
           export $(cat config/.env | xargs)
           envsubst < config/config.json.template > config/config.json
         fi
+      "
+        
+    # Set up config.json
+    - runuser -l freqtrade -c "cp /mnt/secure/freqtrade-bot/config/config.json /mnt/secure/freqtrade-bot/user_data/config.json"
+    - runuser -l freqtrade -c "chown -R freqtrade:freqtrade /mnt/secure/freqtrade-bot/user_data"
+    - runuser -l freqtrade -c "chmod 644 /mnt/secure/freqtrade-bot/user_data/config.json"
+
+    # Clone the repo as freqtrade user
+    - runuser -l freqtrade -c "git clone https://github.com/robert-bogan/freqtrade-bot.git /mnt/secure/freqtrade-bot"
+
+    # Create env config
+    - runuser -l freqtrade -c "mkdir -p /mnt/secure/freqtrade-bot/config"
+    - runuser -l freqtrade -c "echo "POSTGRES_PASSWORD=${var.postgres_password}" > /mnt/secure/freqtrade-bot/config/.env"
+
+    # Optional debug
+    - ls -la /mnt/secure/freqtrade-bot
 
     # Docker compose as freqtrade user
     - runuser -l freqtrade -c "cd /mnt/secure/freqtrade-bot && docker-compose down || true"
