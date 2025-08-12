@@ -108,7 +108,7 @@ user_data = <<-EOF
     - cd /mnt/secure/freqtrade-bot && sudo -u freqtrade docker-compose up -d --build
 
     # Clean up sensitive files
-    # - rm -f /root/gocryptfs_pass
+    - rm -f /root/gocryptfs_pass
     EOF
 }
 
