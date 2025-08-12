@@ -72,9 +72,16 @@ user_data = <<-EOF
           echo -n "${var.gocryptfs_pass}" | gocryptfs -init /mnt/secure_raw; \
       fi
 
-    # Mount encrypted volume as freqtrade user
-    - chown freqtrade:freqtrade /mnt/secure_raw /mnt/secure
-    - sudo -u freqtrade sh -c "echo -n '${var.gocryptfs_pass}' | gocryptfs -allow_other /mnt/secure_raw /mnt/secure"
+    # Mount encrypted volume
+    - mkdir -p /mnt/secure_raw /mnt/secure
+    - if [ ! -f /mnt/secure_raw/gocryptfs.conf ]; then
+        printf "%s" "${var.gocryptfs_pass}" | gocryptfs -q -init /mnt/secure_raw;
+      fi
+    - if [ -f /mnt/secure_raw/gocryptfs.conf ]; then
+        printf "%s" "${var.gocryptfs_pass}" | gocryptfs -allow_other /mnt/secure_raw /mnt/secure;
+      else
+        echo "ERROR: Missing gocryptfs.conf after init!" && exit 1;
+      fi
 
     # Wait for mount to be ready
     - |
