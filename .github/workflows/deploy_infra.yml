@@ -1,16 +1,16 @@
 name: Deploy Infrastructure & Freqtrade
 
-# on:
-#   push:
-#     branches:
-#       - main
 on:
-  workflow_dispatch:
-    inputs:
-      commit_sha:
-        description: 'Commit SHA'
-        required: false
-        default: '8158806194c440bf64c98a3f4432865e793be9ac'  # release  1.0.0
+  push:
+    branches:
+      - main
+# on:
+#   workflow_dispatch:
+#     inputs:
+#       commit_sha:
+#         description: 'Commit SHA'
+#         required: false
+#         default: '8158806194c440bf64c98a3f4432865e793be9ac'  # release  1.0.0
 
 
 jobs:
